@@ -1,9 +1,9 @@
 {
   "name": "hoffmannholisticstore",
-  "main": "tienda-web-PUBLICAR/_worker.js",
+  "main": "_worker.js",
   "compatibility_date": "2024-11-01",
   "assets": {
-    "directory": "./tienda-web-PUBLICAR",
+    "directory": ".",
     "binding": "ASSETS"
   }
 }

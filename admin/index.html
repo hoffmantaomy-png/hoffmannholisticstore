@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Panel de Administración — Hoffmann Holistic Store</title>
+
+  <!-- Fuentes -->
+  <link rel="preconnect" href="https://fonts.bunny.net">
+  <link href="https://fonts.bunny.net/css?family=montserrat:400,600,700|lato:400,700" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../styles.css">
+
+  <style>
+    :root {
+      --admin-bg: #F4F6F0;
+      --admin-sidebar: #2A351F;
+    }
+    body { background: var(--admin-bg); min-height: 100vh; }
+    
+    /* Login screen */
+    .login-wrapper {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .login-card {
+      background: var(--blanco);
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(42,53,31,0.12);
+      width: 100%;
+      max-width: 420px;
+      padding: 36px 28px;
+      text-align: center;
+    }
+    .login-logo { height: 64px; margin-bottom: 20px; }
+    .form-grupo {
+      margin-bottom: 18px;
+      text-align: left;
+    }
+    .form-grupo label {
+      display: block;
+      font-family: var(--fuente-titulo);
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--verde-hoja);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .form-control {
+      width: 100%;
+      padding: 11px 14px;
+      border: 1px solid rgba(95,103,50,0.3);
+      border-radius: 8px;
+      font-family: var(--fuente-texto);
+      font-size: 0.95rem;
+      color: var(--verde-hoja);
+      background: var(--blanco);
+      outline: none;
+      transition: border-color var(--transicion);
+    }
+    .form-control:focus {
+      border-color: var(--oliva);
+      box-shadow: 0 0 0 3px rgba(95,103,50,0.15);
+    }
+    textarea.form-control { resize: vertical; min-height: 80px; }
+
+    /* Admin layout */
+    .admin-layout {
+      display: none; /* Shown after auth */
+      min-height: 100vh;
+    }
+    .admin-navbar {
+      background: var(--verde-hoja);
+      color: var(--blanco);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+    }
+    .admin-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--blanco);
+      font-family: var(--fuente-titulo);
+      font-weight: 700;
+      font-size: 1.05rem;
+    }
+    .admin-brand img { height: 38px; filter: brightness(0) invert(1); }
+    .admin-nav-actions { display: flex; align-items: center; gap: 14px; }
+    .admin-main {
+      max-width: var(--max-ancho);
+      margin: 32px auto;
+      padding: 0 20px 60px;
+    }
+
+    /* Tabs & Cards */
+    .admin-tabs {
+      display: flex;
+      gap: 10px;
+      border-bottom: 2px solid rgba(95,103,50,0.15);
+      margin-bottom: 24px;
+    }
+    .admin-tab {
+      background: none;
+      border: none;
+      padding: 10px 20px;
+      font-family: var(--fuente-titulo);
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: var(--gris-verde);
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      transition: all var(--transicion);
+    }
+    .admin-tab.activo {
+      color: var(--oliva);
+      border-bottom-color: var(--oliva);
+    }
+    
+    .panel-card {
+      background: var(--blanco);
+      border-radius: var(--radio);
+      box-shadow: var(--sombra);
+      padding: 24px;
+      margin-bottom: 28px;
+    }
+    .panel-header-flex {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    /* Stats bar */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 18px;
+      margin-bottom: 24px;
+    }
+    .stat-box {
+      background: var(--blanco);
+      padding: 18px;
+      border-radius: var(--radio);
+      box-shadow: var(--sombra);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .stat-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 10px;
+      background: rgba(95,103,50,0.1);
+      color: var(--oliva);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+    }
+    .stat-val { font-size: 1.4rem; font-weight: 700; color: var(--verde-hoja); font-family: var(--fuente-titulo); }
+    .stat-lbl { font-size: 0.78rem; text-transform: uppercase; color: var(--gris-verde); font-weight: 700; }
+
+    /* Tabla de productos */
+    .tabla-responsive { overflow-x: auto; }
+    .tabla-admin {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.92rem;
+    }
+    .tabla-admin th {
+      background: rgba(95,103,50,0.06);
+      padding: 12px 14px;
+      text-align: left;
+      font-family: var(--fuente-titulo);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--verde-hoja);
+      border-bottom: 2px solid rgba(95,103,50,0.15);
+    }
+    .tabla-admin td {
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(95,103,50,0.1);
+      vertical-align: middle;
+    }
+    .badge-estado {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 20px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .badge-activo { background: #d4edda; color: #155724; }
+    .badge-inactivo { background: #f8d7da; color: #721c24; }
+
+    .acciones-btn {
+      display: flex;
+      gap: 6px;
+    }
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 0.8rem;
+      border-radius: 6px;
+      cursor: pointer;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .btn-sm-edit { background: var(--oliva); color: #fff; }
+    .btn-sm-del { background: #e74c3c; color: #fff; }
+
+    /* Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(42,53,31,0.55);
+      z-index: 300;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-overlay.abierto { display: flex; }
+    .modal-contenido {
+      background: var(--blanco);
+      border-radius: 12px;
+      width: 100%;
+      max-width: 580px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 28px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+    }
+    .modal-cabecera {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(95,103,50,0.15);
+      padding-bottom: 14px;
+      margin-bottom: 20px;
+    }
+
+    .toast-msg {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--verde-hoja);
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      z-index: 500;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ══════════════════════════════════
+       PANTALLA DE ACCESO (LOGIN)
+  ══════════════════════════════════ -->
+  <div class="login-wrapper" id="loginWrapper">
+    <div class="login-card">
+      <img src="../assets/img/logo.png" alt="Hoffmann Holistic Store" class="login-logo">
+      <h2>Hoffmann Holistic Store</h2>
+      <p style="margin-top:6px; font-size:0.88rem;">Panel de administración e inventario</p>
+
+      <form id="formLogin" onsubmit="iniciarSesion(event)" style="margin-top:24px;">
+        <div class="form-grupo">
+          <label for="inputClave">Clave de acceso</label>
+          <input type="password" id="inputClave" class="form-control" placeholder="Introduce la contraseña" required autofocus>
+        </div>
+        <button type="submit" class="btn btn-primario" style="width:100%; padding:12px;">
+          Entrar al panel <i class="bi bi-box-arrow-in-right"></i>
+        </button>
+      </form>
+      <div id="loginError" style="color:#c0392b; font-size:0.84rem; margin-top:12px; display:none;">
+        Clave incorrecta. Inténtalo de nuevo.
+      </div>
+      <p style="margin-top:24px; font-size:0.78rem; color:var(--gris-verde);">
+        <a href="../index.html" style="color:var(--oliva);">← Volver a la tienda</a>
+      </p>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       PANEL PRINCIPAL (DASHBOARD)
+  ══════════════════════════════════ -->
+  <div class="admin-layout" id="adminLayout">
+    
+    <nav class="admin-navbar">
+      <div class="admin-brand">
+        <img src="../assets/img/logo.png" alt="Logo">
+        <span>Hoffmann Holistic Store · Admin</span>
+      </div>
+      <div class="admin-nav-actions">
+        <a href="../index.html" target="_blank" class="btn-sm" style="background:rgba(255,255,255,0.15); color:#fff; text-decoration:none;">
+          <i class="bi bi-eye"></i> Ver tienda
+        </a>
+        <button onclick="cerrarSesion()" class="btn-sm" style="background:#e74c3c; color:#fff;">
+          <i class="bi bi-power"></i> Salir
+        </button>
+      </div>
+    </nav>
+
+    <main class="admin-main">
+      
+      <!-- Indicadores rápidos -->
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-icon"><i class="bi bi-box-seam"></i></div>
+          <div>
+            <div class="stat-val" id="statTotalProductos">0</div>
+            <div class="stat-lbl">Productos en total</div>
+          </div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-icon"><i class="bi bi-check-circle"></i></div>
+          <div>
+            <div class="stat-val" id="statProductosActivos">0</div>
+            <div class="stat-lbl">Visibles en tienda</div>
+          </div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-icon"><i class="bi bi-tags"></i></div>
+          <div>
+            <div class="stat-val" id="statCategorias">7</div>
+            <div class="stat-lbl">Categorías</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pestañas -->
+      <div class="admin-tabs">
+        <button class="admin-tab activo" onclick="cambiarPestana('productos')" id="tabBtnProductos">
+          <i class="bi bi-boxes"></i> Productos
+        </button>
+        <button class="admin-tab" onclick="cambiarPestana('configuracion')" id="tabBtnConfig">
+          <i class="bi bi-gear"></i> Ajustes de Tienda
+        </button>
+        <button class="admin-tab" onclick="cambiarPestana('respaldo')" id="tabBtnRespaldo">
+          <i class="bi bi-arrow-down-up"></i> Respaldo / Carga Masiva
+        </button>
+      </div>
+
+      <!-- SECCIÓN: PRODUCTOS -->
+      <div id="seccionProductos" class="panel-card">
+        <div class="panel-header-flex">
+          <div>
+            <h2>Inventario de Productos</h2>
+            <p style="margin:0; font-size:0.85rem;">Gestiona y publica nuevos artículos para la tienda.</p>
+          </div>
+          <button class="btn btn-primario" onclick="abrirModalProducto()">
+            <i class="bi bi-plus-lg"></i> Nuevo Producto
+          </button>
+        </div>
+
+        <div class="tabla-responsive">
+          <table class="tabla-admin">
+            <thead>
+              <tr>
+                <th>Vista</th>
+                <th>Nombre</th>
+                <th>Categoría</th>
+                <th>Precio</th>
+                <th>Estado</th>
+                <th style="text-align:right;">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tablaProductosCuerpo">
+              <!-- Filas dinámicas -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- SECCIÓN: AJUSTES -->
+      <div id="seccionConfiguracion" class="panel-card" style="display:none;">
+        <h2>Configuración de la Tienda</h2>
+        <p style="font-size:0.88rem;">Información clave de contacto y compras.</p>
+
+        <form id="formConfig" onsubmit="guardarAjustes(event)" style="max-width:540px; margin-top:20px;">
+          <div class="form-grupo">
+            <label for="cfgWhatsApp">WhatsApp para recibir pedidos</label>
+            <input type="text" id="cfgWhatsApp" class="form-control" placeholder="Ej: 584121234567" required>
+            <small style="color:var(--gris-verde); font-size:0.76rem;">Número internacional sin el signo '+'.</small>
+          </div>
+
+          <div class="form-grupo">
+            <label for="cfgMoneda">Moneda principal</label>
+            <select id="cfgMoneda" class="form-control">
+              <option value="USD">Dólares estadounidenses (USD - $)</option>
+              <option value="VES">Bolívares (VES - Bs.)</option>
+            </select>
+          </div>
+
+          <div class="form-grupo">
+            <label for="cfgEnvioGratis">Monto mínimo para Envío Gratis ($)</label>
+            <input type="number" id="cfgEnvioGratis" class="form-control" min="0" step="1">
+          </div>
+
+          <div class="form-grupo">
+            <label for="cfgCostoEnvio">Costo de Envío Base ($)</label>
+            <input type="number" id="cfgCostoEnvio" class="form-control" min="0" step="0.5">
+          </div>
+
+          <button type="submit" class="btn btn-primario" style="margin-top:10px;">
+            Guardar cambios <i class="bi bi-save"></i>
+          </button>
+        </form>
+      </div>
+
+      <!-- SECCIÓN: RESPALDO -->
+      <div id="seccionRespaldo" class="panel-card" style="display:none;">
+        <h2>Exportar e Importar Catálogo</h2>
+        <p style="font-size:0.88rem;">Útil para respaldar tus productos o cargarlos en bloque desde un archivo JSON.</p>
+
+        <div style="display:flex; gap:16px; margin-top:20px; flex-wrap:wrap;">
+          <button class="btn btn-secundario" onclick="exportarCatalogoJSON()">
+            <i class="bi bi-download"></i> Descargar catálogo (JSON)
+          </button>
+
+          <label class="btn btn-contorno" style="background:var(--verde-hoja); cursor:pointer;">
+            <i class="bi bi-upload"></i> Cargar catálogo (JSON)
+            <input type="file" id="inputImportar" accept=".json" onchange="importarCatalogoJSON(event)" style="display:none;">
+          </label>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- ══════════════════════════════════
+       MODAL DE PRODUCTO (CREAR / EDITAR)
+  ══════════════════════════════════ -->
+  <div class="modal-overlay" id="modalProducto">
+    <div class="modal-contenido">
+      <div class="modal-cabecera">
+        <h3 id="modalTitulo">Nuevo Producto</h3>
+        <button type="button" onclick="cerrarModalProducto()" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">×</button>
+      </div>
+
+      <form id="formProducto" onsubmit="guardarProducto(event)">
+        <input type="hidden" id="prodId">
+
+        <div class="form-grupo">
+          <label for="prodNombre">Nombre del producto *</label>
+          <input type="text" id="prodNombre" class="form-control" placeholder="Ej: Amatista Natural en Bruto" required>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:14px;">
+          <div class="form-grupo">
+            <label for="prodCategoria">Categoría *</label>
+            <select id="prodCategoria" class="form-control" required>
+              <option value="cristales">Cristales</option>
+              <option value="sahumerios">Sahumerios</option>
+              <option value="alimentos">Alimentación e infusiones</option>
+              <option value="ropa">Ropa consciente</option>
+              <option value="aceites">Aceites y esencias</option>
+              <option value="meditacion">Meditación</option>
+              <option value="otros">Otros</option>
+            </select>
+          </div>
+
+          <div class="form-grupo">
+            <label for="prodPrecio">Precio ($) *</label>
+            <input type="number" id="prodPrecio" class="form-control" min="0" step="0.5" placeholder="12.00" required>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 100px 1fr; gap:14px;">
+          <div class="form-grupo">
+            <label for="prodEmoji">Emoji</label>
+            <input type="text" id="prodEmoji" class="form-control" placeholder="💎" maxlength="4" style="text-align:center; font-size:1.3rem;">
+          </div>
+          <div class="form-grupo">
+            <label for="prodImagen">URL de foto (opcional)</label>
+            <input type="url" id="prodImagen" class="form-control" placeholder="https://ejemplo.com/foto.jpg">
+          </div>
+        </div>
+
+        <div class="form-grupo">
+          <label for="prodDescripcion">Descripción</label>
+          <textarea id="prodDescripcion" class="form-control" placeholder="Describe brevemente las propiedades o detalles del producto..."></textarea>
+        </div>
+
+        <div class="form-grupo" style="display:flex; align-items:center; gap:10px;">
+          <input type="checkbox" id="prodActivo" checked style="width:18px; height:18px; accent-color:var(--oliva);">
+          <label for="prodActivo" style="margin:0; cursor:pointer;">Mostrar en la tienda (producto activo)</label>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:24px; border-top:1px solid rgba(95,103,50,0.15); padding-top:16px;">
+          <button type="button" class="btn btn-contorno" style="color:var(--gris-verde); border-color:var(--gris-verde);" onclick="cerrarModalProducto()">Cancelar</button>
+          <button type="submit" class="btn btn-primario" id="btnGuardarProd">Guardar Producto</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="toast-msg" id="toastMsg"></div>
+
+  <script src="admin.js"></script>
+</body>
+</html>
